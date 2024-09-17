@@ -34,8 +34,9 @@ if uploaded_file is not None:
         "URL": "url"
     }
 
-    # 必要な列のみを抽出
-    df = df[list(header_mapping.keys())]
+    # 必要な列のみを抽出（存在する列のみ）
+    existing_columns = [col for col in header_mapping.keys() if col in df.columns]
+    df = df[existing_columns]
 
     # ヘッダー名を変更
     df = df.rename(columns=header_mapping)
@@ -63,44 +64,45 @@ if uploaded_file is not None:
 
         sql_statements.append(sql)
 
-    # SQL文を表示
-    st.write("生成されたSQL文:")
+    # 全てのSQL文を結合
+    sql_script = '\n'.join(sql_statements)
 
-    for sql in sql_statements:
-        st.code(sql, language='sql')
-        # コピー機能を追加
-        b64_sql = base64.b64encode(sql.encode()).decode()
-        button_id = f"copy-button-{hash(sql)}"
-        custom_css = f"""
-        <style>
-            #{button_id} {{
-                background-color: #e1e1e1;
-                border: none;
-                padding: 5px 10px;
-                font-size: 14px;
-                cursor: pointer;
-                margin-bottom: 20px;
-            }}
-            #{button_id}:hover {{
-                background-color: #d1d1d1;
-            }}
-        </style>
-        """
-        copy_button = f"""
-        {custom_css}
-        <button id="{button_id}" onclick="copyToClipboard('{b64_sql}')">コピー</button>
-        <script>
-        function copyToClipboard(text) {{
-            const decodedText = atob(text);
-            navigator.clipboard.writeText(decodedText);
-            alert('SQL文をクリップボードにコピーしました。');
+    # コピー用のボタンを作成
+    b64_sql = base64.b64encode(sql_script.encode()).decode()
+    button_id = "copy-button"
+    custom_css = f"""
+    <style>
+        #{button_id} {{
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
         }}
-        </script>
-        """
-        st.markdown(copy_button, unsafe_allow_html=True)
+        #{button_id}:hover {{
+            background-color: #0056b3;
+        }}
+    </style>
+    """
+    copy_button = f"""
+    {custom_css}
+    <button id="{button_id}" onclick="copyToClipboard('{b64_sql}')">コピー</button>
+    <script>
+    function copyToClipboard(text) {{
+        const decodedText = atob(text);
+        navigator.clipboard.writeText(decodedText).then(function() {{
+            alert('コピーしました');
+        }}, function(err) {{
+            alert('コピーに失敗しました: ' + err);
+        }});
+    }}
+    </script>
+    """
+    st.markdown(copy_button, unsafe_allow_html=True)
 
     # SQLスクリプトをダウンロード
-    sql_script = '\n'.join(sql_statements)
     st.download_button(
         label="SQLスクリプトをダウンロード",
         data=sql_script,
