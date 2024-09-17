@@ -33,11 +33,15 @@ if uploaded_file is not None:
         "URL": "url"
     }
 
-    # 必要な列のみを抽出
-    df = df[list(header_mapping.keys())]
+    # 必要な列のみを抽出（存在する列のみ）
+    existing_columns = [col for col in header_mapping.keys() if col in df.columns]
+    df = df[existing_columns]
 
     # ヘッダー名を変更
     df = df.rename(columns=header_mapping)
+
+    # facility_idが重複している場合、最初の行を残して重複行を削除
+    df = df.drop_duplicates(subset='facility_id', keep='first')
 
     # 処理後のデータを表示
     st.write("処理後のデータ:")
