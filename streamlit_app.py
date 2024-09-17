@@ -50,6 +50,6 @@ if uploaded_file is not None:
     st.download_button(
         label="CSVファイルをダウンロード",
         data=csv,
-        file_name="processed.csv",
+        file_name="partners_care.csv",
         mime='text/csv'
     )
